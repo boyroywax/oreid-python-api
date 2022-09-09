@@ -9,7 +9,7 @@ def main():
     # print(google_token)
 
     #
-    # Fail at creating an API action
+    # Fail at calling an API endpoint
     #
     OreIdApi().raw_action(
         ["DELETE"],
