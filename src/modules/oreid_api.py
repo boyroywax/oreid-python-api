@@ -1,53 +1,21 @@
-import requests
 import os
+
+from modules.call_api import Api
 
 
 class OreIdApi:
-    base_url: str = os.getenv("API_URL")
+    """  Make Api calls to the ORE ID Api.
+
+    """
+    base_url: str = os.getenv("OREID_API_URL")
     headers: dict = {
         "api-key": os.getenv("OREID_API_KEY"),
         # "app_id": os.getenv("OREID_APP_ID"),
-        # "service-key": os.getenv("OREID_SERVICE_KEY"),
+        "service-key": os.getenv("OREID_SERVICE_KEY"),
         "content-type": "application/json",
     }
-
-    def prepare_response(self, response: requests.Response) -> dict:
-        print(f'status: {response.status_code} response: {response.json()}')
-        return response.json()
-
-    def make_call(self, *args, **kwargs) -> dict:
-        """ Calls the ORE ID API
-
-        * args variable is a list containing the API action method (POST, GET, etc..)
-        * kwargs variable is a dict containing the API endpoint and the payload
-
-        Returns the response of the API call as a dict.
-
-        https://documenter.getpostman.com/view/7805568/SWE55yRe
-        """
-        action: str = args[0]
-
-        match(action):
-            case "POST":
-                response: requests.Response = requests.request(
-                    action,
-                    url=f'{self.base_url}{kwargs["endpoint"]}',
-                    headers=self.headers,
-                    data=kwargs.get("data", {})
-                )
-                return self.prepare_response(response)
-            case "GET":
-                response: requests.Response = requests.request(
-                    action,
-                    url=f'{self.base_url}{kwargs["endpoint"]}',
-                    headers=self.headers,
-                    params=kwargs.get("params", {})
-                )
-                return self.prepare_response(response)
-            case _:
-                error: dict = {"error": f"Action [{action}] is not supported"}
-                print(error)
-                return error
+    api_instance: Api = Api(base_url=base_url, headers=headers)
+    make_call = api_instance.make_call
 
     def raw_action(self, args: list, kwargs: dict) -> dict:
         return self.make_call(*args, **kwargs)
@@ -100,7 +68,7 @@ class OreIdApi:
         }
         return self.make_call(*args, **kwargs)
 
-    def new_user_with_token(self, id_token: str) -> dict:
+    def login_user_with_token(self, id_token: str, provider: str) -> dict:
         """Creates a new user on the ORE ID Service
 
         https://documenter.getpostman.com/view/7805568/SWE55yRe#9ad14572-b4dd-4c83-975b-46d2c5204734
@@ -108,8 +76,10 @@ class OreIdApi:
         args = ["POST"]
         kwargs = {
             "endpoint": "account/login-user-with-token",
+            "headers": {"Content-Type": "application/x-www-form-urlencoded"},
             "data": {
-                "id_token": id_token
+                "id_token": id_token,
+                "provider": provider
             }
         }
         return self.make_call(*args, **kwargs)
@@ -125,3 +95,25 @@ class OreIdApi:
             "data": data
         }
         return self.make_call(*args, **kwargs)
+
+    def new_chain_account(self, body: dict) -> dict:
+        """Create a blockchain account for a cutodial ORE ID User
+
+        https://documenter.getpostman.com/view/7805568/SWE55yRe#351535f4-a5ce-4600-a738-e9667d907044
+        """
+        args = ["POST"]
+        kwargs = {
+            "endpoint": "custodial/new-chain-account",
+            "data": body
+        }
+        return self.make_call(*args, **kwargs)
+
+    def verify_login(self, login_response: dict) -> dict:
+        """Check the login result and return the result
+        """
+        if login_response.get("exception", None) is None:
+            if login_response["response"].get("account", None) is not None:
+                login_response["verified"] = True
+        else:
+            login_response["verified"] = False
+        return login_response
