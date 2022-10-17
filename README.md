@@ -4,5 +4,5 @@
 
 Run the Google Login Example
 ```text
-QUART_APP=google_login:app python3 -m quart run
+QUART_APP=google_oauth_ex:app python3 -m quart run
 ```
