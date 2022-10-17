@@ -62,6 +62,7 @@ class OreIdApi:
         args = ["GET"]
         kwargs = {
             "endpoint": "account/user",
+            "headers": self.headers,
             "params": {
                 "account": account_name
             }
@@ -90,7 +91,9 @@ class OreIdApi:
         https://documenter.getpostman.com/view/7805568/SWE55yRe#c3709139-724f-482a-92e4-0f6b66b4cdb2
         """
         args = ["POST"]
+
         kwargs = {
+            "headers": self.headers,
             "endpoint": "custodial/new-user",
             "data": data
         }
