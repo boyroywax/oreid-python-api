@@ -1,3 +1,4 @@
 src/modules/__pycache__
 .venv
 .env
+.env.backup
