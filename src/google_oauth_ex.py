@@ -1,8 +1,6 @@
-import json
 import os
 from quart import Quart, redirect, request, url_for, render_template_string, session
 from quart_auth import AuthUser, current_user, AuthManager, login_required, login_user, logout_user
-import urllib.parse
 from dotenv import load_dotenv
 
 from modules.oreid_api import OreIdApi
@@ -64,10 +62,9 @@ async def oauth2callback():
     if login_result is True:
         # If successful log user into Quart Auth
         login_user(AuthUser(request.args.get('authuser', None)))
-        session['token'] = verified_token.get('access_token', None)
-
-        user_data = oreid_api.get_user(verified_login.get("account", None))
-        print(f'user_data: {user_data}')
+        session['token'] = verified_token['response'].get('access_token', None)
+        session['user_data'] = oreid_api.get_user(verified_login['response'].get("account", None))
+        print(f'user_data: {session["user_data"]}')
         return redirect(url_for('user'))
     else:
         return await render_template_string("Could not login")
@@ -79,12 +76,25 @@ async def login():
 
 
 @login_required
+@app.route("/custodial/new-account")
+async def create_cust_account():
+    response: dict = oreid_api.new_custodial_account({
+        "access_token": session["token"],
+        "access_token_provider": "google",
+        "account": session["user_data"].get("account"),
+        "account_type": "native",
+        "user_password": "2233"
+    })
+    return await render_template_string(f"new custodial user: {response}")
+
+
+@login_required
 @app.route("/user")
 async def user():
     if await current_user.is_authenticated:
         return await render_template_string(
             # f"You have reached the User's Page.\n"
-            f"Is user authenticated? {await current_user.is_authenticated()}"
+            f"Is user authenticated? {await current_user.is_authenticated}"
         )
     else:
         return redirect(url_for('index'))
