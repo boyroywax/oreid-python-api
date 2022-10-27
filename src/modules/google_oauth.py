@@ -23,6 +23,7 @@ class GoogleOauth():
     auth_uri: str = 'https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={}&redirect_uri={}&scope={}'.format(client_id, redirect_uri, scope)
     token_endpoint: str = "https://oauth2.googleapis.com/token"
     authorization_endpoint: str = 'https://accounts.google.com/o/oauth2/v2/auth'
+    logout_url: str = 'https://accounts.google.com/o/oauth2/revoke'
     authorization_endpoint_params: dict = {
         "response_type": "code",
         "client_id": client_id,
@@ -101,3 +102,16 @@ class GoogleOauth():
         else:
             token["verified"] = False
         return token
+
+    def logout(self, access_token: str) -> dict:
+        """
+        
+        """
+        args = ["POST"]
+        kwargs = {
+            "url": self.logout_url,
+            "params": {
+                "token": access_token
+            }
+        }
+        return self.make_call(*args, **kwargs)

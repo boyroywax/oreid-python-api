@@ -105,7 +105,7 @@ async def user():
 async def logout():
 
     if session['token'] is not None:
-        google_oauth.logout(session['token'])
+        google_oauth.logout(str(session['token']))
         # print(f'logout_return: {logout_return}')
         logout_user()
     return redirect(url_for('index'))
